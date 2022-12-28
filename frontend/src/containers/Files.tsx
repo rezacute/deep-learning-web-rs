@@ -4,7 +4,7 @@ const FilesAPI = {
     all: async () =>
         await (await fetch(`/api/files`)).json(),
     create: async (formData: FormData) =>
-        await fetch('/api/files', {
+        await fetch('/api/files/face', {
             method: 'POST',
             body: formData,
         }),

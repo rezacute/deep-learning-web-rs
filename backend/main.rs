@@ -6,6 +6,9 @@ use actix_web::{App, HttpServer, web};
 use actix_web::middleware::{Compress, Logger, NormalizePath};
 use actix_web::web::Data;
 
+
+use tensorflow_sys as tf;
+
 mod schema;
 mod services;
 mod models;
@@ -14,6 +17,8 @@ mod mail;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let app_data = create_rust_app::setup();
+    tf::library::load().expect("Unable to load libtensorflow");
+    
 
     HttpServer::new(move || {
         let mut app = App::new()
