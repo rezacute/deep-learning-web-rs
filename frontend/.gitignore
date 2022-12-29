@@ -22,5 +22,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-frontend/public/images/facedetect*
-frontend/public/images/facedetect/
+public/images/facedetect*
+public/images/facedetect/
