@@ -24,3 +24,4 @@ yarn-error.log*
 
 public/images/facedetect*
 public/images/facedetect/
+public/images/facedetect.jpg
