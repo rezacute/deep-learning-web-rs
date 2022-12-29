@@ -20,6 +20,14 @@ interface PaginationResult<T> {
   num_pages: number
 }
 
+interface BBox {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  prob: number
+}
+
 interface FileInfo {
   id: number
   key: string

@@ -45,6 +45,7 @@ async fn main() -> std::io::Result<()> {
         }
 
         app = app.service(api_scope);
+        app = app.service(Files::new("/images", "./frontend/public/images"));
         app = app.default_service(web::get().to(create_rust_app::render_views));
         app
     }).bind("0.0.0.0:3000")?.run().await

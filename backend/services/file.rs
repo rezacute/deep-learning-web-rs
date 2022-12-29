@@ -2,10 +2,11 @@ use actix_multipart::Multipart;
 use actix_web::web::{Data, Path};
 use actix_web::{HttpResponse, ResponseError};
 use create_rust_app::{Attachment, AttachmentBlob, AttachmentData, Database, Storage};
-use futures_util::StreamExt as _;
+use futures_util::{StreamExt as _, TryFutureExt};
 use serde::Serialize;
 
 use anyhow::{bail, Result};
+use tokio::fs;
 use std::fs::File;
 use std::io::Write;
 use tch::vision::imagenet;
@@ -19,6 +20,8 @@ use image::{GenericImageView, Rgba};
 use imageproc::drawing::draw_hollow_rect_mut;
 use imageproc::rect::Rect;
 const LINE_COLOUR: Rgba<u8> = Rgba([0, 255, 0, 0]);
+use std::time::{SystemTime,UNIX_EPOCH};
+
 #[derive(StructOpt)]
 struct Opt {
     #[structopt(parse(from_os_str))]
@@ -27,8 +30,8 @@ struct Opt {
     #[structopt(parse(from_os_str))]
     output: PathBuf,
 }
-
-#[derive(Copy, Clone, Debug)]
+#[tsync::tsync]
+#[derive(Serialize,Copy, Clone, Debug)]
 // Make it a bit nicer to work with the results, by adding a more explanatory struct
 pub struct BBox {
     pub x1: f32,
@@ -236,10 +239,10 @@ async fn face_detect(mut payload: Multipart) -> HttpResponse {
                         prob,
                     })
                     .collect();
+                
+                // println!("BBox Length: {}, BBoxes:{:#?}", bboxes.len(), bboxes);
 
-                println!("BBox Length: {}, BBoxes:{:#?}", bboxes.len(), bboxes);
-
-                //We want to change input_image since it is not needed.
+                // //We want to change input_image since it is not needed.
                 let mut output_image = input_image.to_rgba8();
 
                 //Iterate through all bounding boxes
@@ -253,7 +256,20 @@ async fn face_detect(mut payload: Multipart) -> HttpResponse {
                 }
 
                 //Once we've modified the image we save it in the output location.
-                output_image.save(PathBuf::from("facedetect.jpg")).unwrap();
+                let output_file = PathBuf::from("frontend/public/images/facedetect.jpg");
+                output_image.save(&output_file).unwrap();
+                let now = SystemTime::now().duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis();
+                fs::remove_dir_all(PathBuf::from("frontend/public/images/facedetect")).unwrap_or_else(|_| ()).await;
+
+                fs::create_dir(PathBuf::from("frontend/public/images/facedetect")).unwrap_or_else(|_| ()).await;
+                fs::hard_link(&output_file, format!("frontend/public/images/facedetect/{:?}.jpg",now)).unwrap_or_else(|_| ()).await;
+                #[derive(Serialize)]
+                struct MyObj {
+                    id: String,
+                }
+                return HttpResponse::Ok().json(MyObj{id:format!("{:?}",now)});
                 // let attached_req = Attachment::attach(&mut db, &store, "file".to_string(), "NULL".to_string(), 0, AttachmentData {
                 //     data,
                 //     file_name
