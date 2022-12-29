@@ -9,6 +9,7 @@ use anyhow::{bail, Result};
 use tokio::fs;
 use std::fs::File;
 use std::io::Write;
+use std::string;
 use tch::vision::imagenet;
 
 use tensorflow::{Graph, ImportGraphDefOptions, Session, SessionOptions, SessionRunArgs, Tensor};
@@ -130,10 +131,15 @@ async fn create(mut payload: Multipart) -> HttpResponse {
                     .apply(&model)
                     .softmax(-1, tch::Kind::Float);
 
+                    let mut result:  Vec<String> = vec![];
+
                 // Print the top 5 categories for this image.
                 for (probability, class) in imagenet::top(&output, 5).iter() {
-                    println!("{:50} {:5.2}%", class, 100.0 * probability)
+                    println!("{:50} {:5.2}%", class, 100.0 * probability);
+                    result.push(format!("{:50} {:5.2}%", class, 100.0 * probability));
                 }
+
+                return HttpResponse::Ok().json(result);
                 // let attached_req = Attachment::attach(&mut db, &store, "file".to_string(), "NULL".to_string(), 0, AttachmentData {
                 //     data,
                 //     file_name
