@@ -23,3 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 
 frontend/public/images/facedetect*
+frontend/public/images/facedetect/
